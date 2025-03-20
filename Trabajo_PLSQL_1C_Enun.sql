@@ -10,6 +10,7 @@ DROP SEQUENCE seq_pedidos;
 -- Creación de tablas y secuencias
 
 --- comentario prueba
+-- comentario prueba 2
 
 create sequence seq_pedidos;
 
