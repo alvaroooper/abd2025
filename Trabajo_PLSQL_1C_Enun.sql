@@ -9,7 +9,7 @@ DROP SEQUENCE seq_pedidos;
 
 -- Creación de tablas y secuencias
 
-
+--- comentario prueba
 
 create sequence seq_pedidos;
 
