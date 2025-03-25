@@ -58,6 +58,8 @@ create or replace procedure registrar_pedido(
     arg_id_primer_plato INTEGER DEFAULT NULL,
     arg_id_segundo_plato INTEGER DEFAULT NULL
 ) is 
+
+    --Declaración de excepciones
     ex_pedido_sin_platos EXCEPTION;
     PRAGMA EXCEPTION_INIT(ex_pedido_sin_platos, -20002);
 
@@ -73,10 +75,28 @@ create or replace procedure registrar_pedido(
     ex_segundo_plato_no_existe EXCEPTION;
     PRAGMA EXCEPTION_INIT(ex_segundo_plato_no_existe, -20004);
 
+    --Declaración de variables
+    existenciasPlato1 INTEGER;
+    existenciasPlato2 INTEGER;
+
     begin
         if arg_id_primer_plato is NULL and arg_id_segundo_plato is NULL then
             RAISE ex_pedido_sin_platos
         end if;  
+
+        select count(*) into existenciasPlato1 from platos
+        where id_plato = arg_id_primer_plato;
+        if existenciasPlato1 = 0 then
+            RAISE ex_primer_plato_no_existe;
+        end if;
+        
+        select count(*) into existenciasPlato2 from platos
+        where id_plato = arg_id_segundo_plato;
+        if existenciasPlato2 = 0 then
+            RAISE ex_segundo_plato_no_existe;
+        end if;
+
+
 end;
 /
 
