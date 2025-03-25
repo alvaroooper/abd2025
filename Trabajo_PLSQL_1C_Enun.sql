@@ -9,7 +9,7 @@ DROP SEQUENCE seq_pedidos;
 
 -- Creación de tablas y secuencias
 
---- comentario prueba
+
 
 create sequence seq_pedidos;
 
@@ -58,8 +58,25 @@ create or replace procedure registrar_pedido(
     arg_id_primer_plato INTEGER DEFAULT NULL,
     arg_id_segundo_plato INTEGER DEFAULT NULL
 ) is 
- begin
-  null; -- sustituye esta línea por tu código
+    ex_pedido_sin_platos EXCEPTION;
+    PRAGMA EXCEPTION_INIT(ex_pedido_sin_platos, -20002);
+
+    ex_plato_no_disponible     EXCEPTION;
+    PRAGMA EXCEPTION_INIT(ex_plato_no_disponible, -20001);
+
+    ex_personal_sin_capacidad  EXCEPTION;
+    PRAGMA EXCEPTION_INIT(ex_personal_sin_capacidad, -20003);
+
+    ex_primer_plato_no_existe  EXCEPTION;
+    PRAGMA EXCEPTION_INIT(ex_primer_plato_no_existe, -20004);
+
+    ex_segundo_plato_no_existe EXCEPTION;
+    PRAGMA EXCEPTION_INIT(ex_segundo_plato_no_existe, -20004);
+
+    begin
+        if arg_id_primer_plato is NULL and arg_id_segundo_plato is NULL then
+            RAISE ex_pedido_sin_platos
+        end if;  
 end;
 /
 
