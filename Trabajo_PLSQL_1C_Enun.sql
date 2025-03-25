@@ -106,7 +106,12 @@ create or replace procedure registrar_pedido(
         if disponibilidadPlato1 = 0 or disponibilidadPlato2 = 0 then
         RAISE ex_plato_no_disponible;
         end if;
-
+        
+        select pedidos_activos into cantidadPedidosActivos from personal_servicio
+        where id_personal = arg_id_personal;
+        if cantidadPedidosActivos = 5 then
+            RAISE ex_personal_sin_capacidad;
+        end if;
 
 
 end;
