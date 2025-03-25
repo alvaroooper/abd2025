@@ -88,23 +88,32 @@ create or replace procedure registrar_pedido(
             RAISE ex_pedido_sin_platos
         end if;  
 
-        select count(*) into existenciasPlato1 from platos
-        where id_plato = arg_id_primer_plato;
-        if existenciasPlato1 = 0 then
-            RAISE ex_primer_plato_no_existe;
+        if arg_id_primer_plato is not null then
+        -- Lanzamiento de excepciones relacionadas con el primer plato
+            select count(*) into existenciasPlato1 from platos
+            where id_plato = arg_id_primer_plato;
+            if existenciasPlato1 = 0 then
+                RAISE ex_primer_plato_no_existe;
+            else
+                select disponible into disponibilidadPlato1 from platos WHERE id_plato = arg_id_primer_plato;
+                if disponibilidadPlato1 = 0 then
+                    RAISE ex_plato_no_disponible;
+                end if;
+            end if;        
         end if;
-        
-        select count(*) into existenciasPlato2 from platos
-        where id_plato = arg_id_segundo_plato;
-        if existenciasPlato2 = 0 then
-            RAISE ex_segundo_plato_no_existe;
-        end if;
+    
+        if arg_id_segundo_plato is not null then
 
-        select disponible into disponibilidadPlato1 from platos WHERE id_plato = arg_id_primer_plato;
-        select disponible into disponibilidadPlato2 from platos WHERE id_plato = arg_id_segundo_plato;
-
-        if disponibilidadPlato1 = 0 or disponibilidadPlato2 = 0 then
-        RAISE ex_plato_no_disponible;
+            select count(*) into existenciasPlato2 from platos
+            where id_plato = arg_id_segundo_plato;
+            if existenciasPlato2 = 0 then
+                RAISE ex_segundo_plato_no_existe;
+            else
+                select disponible into disponibilidadPlato2 from platos WHERE id_plato = arg_id_segundo_plato;
+                if disponibilidadPlato2 = 0 then
+                    RAISE ex_plato_no_disponible;
+                end if;
+            end if;
         end if;
         
         select pedidos_activos into cantidadPedidosActivos from personal_servicio
