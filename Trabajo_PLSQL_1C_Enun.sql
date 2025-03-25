@@ -79,6 +79,10 @@ create or replace procedure registrar_pedido(
     existenciasPlato1 INTEGER;
     existenciasPlato2 INTEGER;
 
+    disponibilidadPlato1 platos.disponible%TYPE;
+    disponibilidadPlato2 platos.disponible%TYPE;
+
+
     begin
         if arg_id_primer_plato is NULL and arg_id_segundo_plato is NULL then
             RAISE ex_pedido_sin_platos
@@ -95,6 +99,14 @@ create or replace procedure registrar_pedido(
         if existenciasPlato2 = 0 then
             RAISE ex_segundo_plato_no_existe;
         end if;
+
+        select disponible into disponibilidadPlato1 from platos WHERE id_plato = arg_id_primer_plato;
+        select disponible into disponibilidadPlato2 from platos WHERE id_plato = arg_id_segundo_plato;
+
+        if disponibilidadPlato1 = 0 or disponibilidadPlato2 = 0 then
+        RAISE ex_plato_no_disponible;
+        end if;
+
 
 
 end;
