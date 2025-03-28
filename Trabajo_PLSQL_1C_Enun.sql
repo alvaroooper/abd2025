@@ -283,6 +283,24 @@ begin
             DBMS_OUTPUT.PUT_LINE('Test: FALLADO  -> Algo ha fallado, resultado no esperado' );
     END;
   end;
+
+
+  --caso 2 Pedido sin ningún plato
+    DBMS_OUTPUT.PUT_LINE('Test 2: Pedido vacío (sin platos)');
+    BEGIN
+        inicializa_test;
+        registrar_pedido(1, 1, NULL, NULL);
+        DBMS_OUTPUT.PUT_LINE('Test: FALLADO  -> No se lanzó excepción para pedido vacío.');
+    EXCEPTION
+        WHEN OTHERS THEN
+            IF SQLCODE = -20002 THEN
+                DBMS_OUTPUT.PUT_LINE('Test: OK  -> Excepción correcta para pedido vacío: ' || SQLERRM);
+            ELSE
+                DBMS_OUTPUT.PUT_LINE('Test: FALLADO  -> Excepción no controlada: ' || SQLERRM);
+            END IF;
+    END;
+  end;
+
   
   -- Idem para el resto de casos
 
