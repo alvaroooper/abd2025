@@ -9,8 +9,6 @@ DROP SEQUENCE seq_pedidos;
 
 -- Creación de tablas y secuencias
 
-
-
 create sequence seq_pedidos;
 
 CREATE TABLE clientes (
@@ -59,70 +57,141 @@ create or replace procedure registrar_pedido(
     arg_id_segundo_plato INTEGER DEFAULT NULL
 ) is 
 
+    -----------------------------------------------------------
     --Declaración de excepciones
+    -----------------------------------------------------------
+    -- Excepción para cuando se quiere crear un pedido sin platos
     ex_pedido_sin_platos EXCEPTION;
     PRAGMA EXCEPTION_INIT(ex_pedido_sin_platos, -20002);
-
-    ex_plato_no_disponible     EXCEPTION;
+    ex_pedido_sin_platos CONSTANT VARCHAR2(100) := 'El pedido debe tener al menos un plato seleccionado.';
+    
+    -- Excepción para cuando se quiere introducir un pato no disponible
+    ex_plato_no_disponible  EXCEPTION;
     PRAGMA EXCEPTION_INIT(ex_plato_no_disponible, -20001);
+    ex_plato_no_disponible CONSTANT VARCHAR2(100) := 'El plato introducido no está disponible';
 
+    -- Excepción para cuando el personal está sin capacidad
     ex_personal_sin_capacidad  EXCEPTION;
     PRAGMA EXCEPTION_INIT(ex_personal_sin_capacidad, -20003);
-
+    ex_personal_sin_capacidad CONSTANT VARCHAR2(100) := 'El personal no tiene capacidad dsiponible';
+    
+    -- Excepción para cuando se quiere introducir un primer plato inexistente
     ex_primer_plato_no_existe  EXCEPTION;
     PRAGMA EXCEPTION_INIT(ex_primer_plato_no_existe, -20004);
-
+    ex_primer_plato_no_existe CONSTANT VARCHAR2(100) := 'El primer plato no nexiste';
+    
+    -- Excepción para cuando se quiere introducir un segundo plato inexistente
     ex_segundo_plato_no_existe EXCEPTION;
     PRAGMA EXCEPTION_INIT(ex_segundo_plato_no_existe, -20004);
+    ex_segundo_plato_no_existe CONSTANT VARCHAR2(100) := 'El segundo plato no existe';
 
+    -----------------------------------------------------------
     --Declaración de variables
+    -----------------------------------------------------------
     existenciasPlato1 INTEGER;
     existenciasPlato2 INTEGER;
 
     disponibilidadPlato1 platos.disponible%TYPE;
     disponibilidadPlato2 platos.disponible%TYPE;
-
-
-    begin
-        if arg_id_primer_plato is NULL and arg_id_segundo_plato is NULL then
-            RAISE ex_pedido_sin_platos
-        end if;  
-
-        if arg_id_primer_plato is not null then
-        -- Lanzamiento de excepciones relacionadas con el primer plato
-            select count(*) into existenciasPlato1 from platos
-            where id_plato = arg_id_primer_plato;
-            if existenciasPlato1 = 0 then
-                RAISE ex_primer_plato_no_existe;
-            else
-                select disponible into disponibilidadPlato1 from platos WHERE id_plato = arg_id_primer_plato;
-                if disponibilidadPlato1 = 0 then
-                    RAISE ex_plato_no_disponible;
-                end if;
-            end if;        
-        end if;
     
-        if arg_id_segundo_plato is not null then
-
-            select count(*) into existenciasPlato2 from platos
-            where id_plato = arg_id_segundo_plato;
-            if existenciasPlato2 = 0 then
-                RAISE ex_segundo_plato_no_existe;
-            else
-                select disponible into disponibilidadPlato2 from platos WHERE id_plato = arg_id_segundo_plato;
-                if disponibilidadPlato2 = 0 then
-                    RAISE ex_plato_no_disponible;
-                end if;
+    cantidadPedidosActivos personal_servicio.pedidos_activos%type;
+    
+    precioPlato1 INTEGER;
+    precioPlato2 INTEGER;
+    precioTotal INTEGER;
+    siguienteId INTEGER;
+ begin
+    -----------------------------------------------------------
+    --Comprobación de que se selecciona al menos un plato
+    -----------------------------------------------------------
+    if arg_id_primer_plato is NULL and arg_id_segundo_plato is NULL then
+        RAISE ex_pedido_sin_platos;
+    end if;
+    
+    -----------------------------------------------------------
+    -- Validación del primer plato (existencia y disponibilidad)
+    -----------------------------------------------------------
+    if arg_id_primer_plato is not null then
+        -- Controlar excepción plato inexistente
+        select count(*) into existenciasPlato1 from platos
+        where id_plato = arg_id_primer_plato;
+        if existenciasPlato1 = 0 then 
+            RAISE ex_primer_plato_no_existe;
+        else
+            -- Controlar excepción plato no disponible
+            select disponible into disponibilidadPlato1 from platos WHERE id_plato = arg_id_primer_plato;
+            if disponibilidadPlato1 = 0 then
+                RAISE ex_plato_no_disponible;
             end if;
         end if;
         
-        select pedidos_activos into cantidadPedidosActivos from personal_servicio
-        where id_personal = arg_id_personal;
-        if cantidadPedidosActivos = 5 then
-            RAISE ex_personal_sin_capacidad;
+        SELECT precio
+        INTO precioPlato1
+        FROM Platos
+        WHERE id_plato = arg_id_primer_plato;
+    end if;
+    
+    
+    -----------------------------------------------------------
+    -- Validación del segundo plato (existencia y disponibilidad)
+    -----------------------------------------------------------
+    if arg_id_segundo_plato is not null then
+        -- Controlar excepción plato inexistente
+        select count(*) into existenciasPlato2 from platos
+        where id_plato = arg_id_segundo_plato;
+        if existenciasPlato2 = 0 then
+            RAISE ex_segundo_plato_no_existe;
+        else
+            -- Controlar excepción plato no disponible
+            select disponible into disponibilidadPlato2 from platos WHERE id_plato = arg_id_segundo_plato;
+            if disponibilidadPlato2 = 0 then
+                RAISE ex_plato_no_disponible;
+            end if;
         end if;
+        
+        SELECT precio
+        INTO precioPlato2
+        FROM Platos
+        WHERE id_plato = arg_id_segundo_plato;
+    end if;
+    ----------------------------------------------------------------------------
+    --Validación y bloqueo del personal de servicio para control de concurrencia
+    ----------------------------------------------------------------------------
+    -- Controlar excepción personal sin capacidad
+    select pedidos_activos into cantidadPedidosActivos 
+    from personal_servicio
+    where id_personal = arg_id_personal
+    FOR UPDATE; -- Se usa FOR UPDATE para evitar lecturas concurrentes)
+    if cantidadPedidosActivos = 5 then
+        RAISE ex_personal_sin_capacidad;
+    end if;
 
+	
+    ------------------------------------------------------------------
+    --Cálculo del precio total y obtención del siguiente ID de pedido
+    ------------------------------------------------------------------
+    precioTotal := precioPlato1 + precioPlato2;
+    siguienteId := seq_pedidos.nextval;
 
+    -----------------------------------------------------------
+    --Registro del pedido 
+    -----------------------------------------------------------
+    INSERT INTO pedidos (id_pedido, id_cliente, id_personal, fecha_pedido, total)
+    VALUES (siguienteId, arg_id_cliente, arg_id_personal, SYSDATE, precioTotal);
+    
+    if arg_id_primer_plato is not null then
+        INSERT INTO detalle_pedido (id_pedido, id_plato, cantidad)
+        VALUES (siguienteId, arg_id_primer_plato, 1);
+    end if;
+    if arg_id_segundo_plato is not null then
+        INSERT INTO detalle_pedido (id_pedido, id_plato, cantidad)
+        VALUES (siguienteId, arg_id_segundo_plato, 1);
+    end if;
+    
+    UPDATE personal_servicio
+    SET pedidos_activos = pedidos_activos + 1
+    WHERE id_personal = arg_id_personal;
+    
 end;
 /
 
@@ -140,6 +209,9 @@ end;
 -- 
 
 
+-----------------------------------------------------------
+-- Procedimiento dado para resetear la secuencia
+-----------------------------------------------------------
 create or replace
 procedure reset_seq( p_seq_name varchar )
 is
@@ -160,6 +232,9 @@ begin
 end;
 /
 
+-----------------------------------------------------------
+-- Procedimiento  dado para inicializar la base de datos
+-----------------------------------------------------------
 
 create or replace procedure inicializa_test is
 begin
