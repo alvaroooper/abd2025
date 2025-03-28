@@ -158,7 +158,6 @@ create or replace procedure registrar_pedido(
     where id_personal = arg_id_personal
     FOR UPDATE; -- Se usa FOR UPDATE para evitar lecturas concurrentes)
     if cantidadPedidosActivos = 5 then
-        RAISE ex_personal_sin_capacidad;
         raise_application_error(-20003, msg_personal_sin_capacidad);
     end if;
 
