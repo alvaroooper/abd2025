@@ -63,27 +63,22 @@ create or replace procedure registrar_pedido(
     -- Excepción para cuando se quiere crear un pedido sin platos
     ex_pedido_sin_platos EXCEPTION;
     PRAGMA EXCEPTION_INIT(ex_pedido_sin_platos, -20002);
-    ex_pedido_sin_platos CONSTANT VARCHAR2(100) := 'El pedido debe tener al menos un plato seleccionado.';
+    msg_pedido_sin_platos CONSTANT VARCHAR2(100) := 'El pedido debe tener al menos un plato seleccionado.';
     
     -- Excepción para cuando se quiere introducir un pato no disponible
     ex_plato_no_disponible  EXCEPTION;
     PRAGMA EXCEPTION_INIT(ex_plato_no_disponible, -20001);
-    ex_plato_no_disponible CONSTANT VARCHAR2(100) := 'El plato introducido no está disponible';
+    msg_plato_no_disponible CONSTANT VARCHAR2(100) := 'El plato introducido no está disponible';
 
     -- Excepción para cuando el personal está sin capacidad
     ex_personal_sin_capacidad  EXCEPTION;
     PRAGMA EXCEPTION_INIT(ex_personal_sin_capacidad, -20003);
-    ex_personal_sin_capacidad CONSTANT VARCHAR2(100) := 'El personal no tiene capacidad dsiponible';
+    msg_personal_sin_capacidad CONSTANT VARCHAR2(100) := 'El personal no tiene capacidad dsiponible';
     
-    -- Excepción para cuando se quiere introducir un primer plato inexistente
-    ex_primer_plato_no_existe  EXCEPTION;
-    PRAGMA EXCEPTION_INIT(ex_primer_plato_no_existe, -20004);
-    ex_primer_plato_no_existe CONSTANT VARCHAR2(100) := 'El primer plato no nexiste';
-    
-    -- Excepción para cuando se quiere introducir un segundo plato inexistente
-    ex_segundo_plato_no_existe EXCEPTION;
-    PRAGMA EXCEPTION_INIT(ex_segundo_plato_no_existe, -20004);
-    ex_segundo_plato_no_existe CONSTANT VARCHAR2(100) := 'El segundo plato no existe';
+    -- Excepción para cuando se quiere introducir un plato inexistente
+    ex_plato_no_existe  EXCEPTION;
+    PRAGMA EXCEPTION_INIT(ex_plato_no_existe, -20004);
+    msg_plato_no_existe CONSTANT VARCHAR2(100) := 'El plato no nexiste';
 
     -----------------------------------------------------------
     --Declaración de variables
@@ -105,7 +100,7 @@ create or replace procedure registrar_pedido(
     --Comprobación de que se selecciona al menos un plato
     -----------------------------------------------------------
     if arg_id_primer_plato is NULL and arg_id_segundo_plato is NULL then
-        RAISE ex_pedido_sin_platos;
+        raise_application_error(-20002, msg_pedido_sin_platos);
     end if;
     
     -----------------------------------------------------------
@@ -116,12 +111,12 @@ create or replace procedure registrar_pedido(
         select count(*) into existenciasPlato1 from platos
         where id_plato = arg_id_primer_plato;
         if existenciasPlato1 = 0 then 
-            RAISE ex_primer_plato_no_existe;
+            raise_application_error(-20004, msg_plato_no_existe);
         else
             -- Controlar excepción plato no disponible
             select disponible into disponibilidadPlato1 from platos WHERE id_plato = arg_id_primer_plato;
             if disponibilidadPlato1 = 0 then
-                RAISE ex_plato_no_disponible;
+                raise_application_error(-20001, msg_plato_no_disponible);
             end if;
         end if;
         
@@ -140,12 +135,12 @@ create or replace procedure registrar_pedido(
         select count(*) into existenciasPlato2 from platos
         where id_plato = arg_id_segundo_plato;
         if existenciasPlato2 = 0 then
-            RAISE ex_segundo_plato_no_existe;
+            raise_application_error(-20004, msg_plato_no_existe);
         else
             -- Controlar excepción plato no disponible
             select disponible into disponibilidadPlato2 from platos WHERE id_plato = arg_id_segundo_plato;
             if disponibilidadPlato2 = 0 then
-                RAISE ex_plato_no_disponible;
+                raise_application_error(-20001, msg_plato_no_disponible);
             end if;
         end if;
         
@@ -164,6 +159,7 @@ create or replace procedure registrar_pedido(
     FOR UPDATE; -- Se usa FOR UPDATE para evitar lecturas concurrentes)
     if cantidadPedidosActivos = 5 then
         RAISE ex_personal_sin_capacidad;
+        raise_application_error(-20003, msg_personal_sin_capacidad);
     end if;
 
 	
@@ -191,6 +187,10 @@ create or replace procedure registrar_pedido(
     UPDATE personal_servicio
     SET pedidos_activos = pedidos_activos + 1
     WHERE id_personal = arg_id_personal;
+EXCEPTION
+    when others then
+    rollback;
+    raise;
     
 end;
 /
@@ -273,6 +273,15 @@ begin
   --caso 1 Pedido correct, se realiza
   begin
     inicializa_test;
+    DBMS_OUTPUT.PUT_LINE('Test 1: Pedido correcto');
+    BEGIN
+        inicializa_test;
+        registrar_pedido(1, 1, 1, 2);
+        DBMS_OUTPUT.PUT_LINE('Test: OK  -> Pedido realizado correctamente');
+    EXCEPTION
+        WHEN OTHERS THEN
+            DBMS_OUTPUT.PUT_LINE('Test: FALLADO  -> Algo ha fallado, resultado no esperado' );
+    END;
   end;
   
   -- Idem para el resto de casos
