@@ -213,7 +213,14 @@ end;
 --      tendrá que esperar a que la transacción que ha adquirido el bloqueo finalice y de esta forma
 --      libere el bloqueo.
 -- * P4.3
---
+--      Sí, podemos asegurar en gran medida la consistencia. Usamos `FOR UPDATE` cuando
+--      consultamos los `pedidos_activos` del personal. Esto bloquea la fila de ese
+--      trabajador, obligando a que otras operaciones concurrentes sobre el mismo
+--      trabajador esperen. De esta forma, nos aseguramos de que nuestra comprobación
+--      del límite (si es 5) y la posterior actualización del contador se hagan sin
+--      interferencias que puedan llevar a superar dicho límite. Además, el `ROLLBACK`
+--      final en caso de cualquier error asegura que la operación es atómica: o
+--      insertamos/actualizamos todo, o no dejamos rastro.
 -- * P4.4
 --
 -- * P4.5
