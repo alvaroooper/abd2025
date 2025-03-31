@@ -300,6 +300,22 @@ begin
     END;
   end;
 
+  -- caso 3: pedido plato que no existe
+      DBMS_OUTPUT.PUT_LINE('Test 3: Pedido con un plato que no existe');
+    BEGIN
+        inicializa_test;
+        registrar_pedido(1, 1, 1, 5);
+        DBMS_OUTPUT.PUT_LINE('Test: FALLADO  -> No se lanzó excepción para el pedido con un plato inexistente.');
+    EXCEPTION
+        WHEN OTHERS THEN
+            IF SQLCODE = -20004 THEN
+                DBMS_OUTPUT.PUT_LINE('Test: OK  -> Excepción correcta para pedido con plato inexistente: ' || SQLERRM);
+            ELSE
+                DBMS_OUTPUT.PUT_LINE('Test: FALLADO  -> Excepción no controlada: ' || SQLERRM);
+            END IF;
+        DBMS_OUTPUT.PUT_LINE('');
+    END;
+
   
   -- Idem para el resto de casos
 
