@@ -186,6 +186,7 @@ create or replace procedure registrar_pedido(
     UPDATE personal_servicio
     SET pedidos_activos = pedidos_activos + 1
     WHERE id_personal = arg_id_personal;
+
 EXCEPTION
     when others then
     rollback;
@@ -197,7 +198,12 @@ end;
 ------ Deja aquí tus respuestas a las preguntas del enunciado:
 -- NO SE CORREGIRÁN RESPUESTAS QUE NO ESTÉN AQUÍ (utiliza el espacio que necesites apra cada una)
 -- * P4.1
---
+--      Para garantizar en nuestro código que ningún miembro del personal de servicio supere
+--      el límite de pedidos activos, antes de realizar el UPDATE donde le sumamos uno al
+--      número de pedidos activos del personal de servicio correspondiente, nos aseguramos
+--      de que antes de actualizar su número de pedidos no sea el del límite, que en este caso
+--      es 5. Si el número de pedidos activos es 5, lanzaría la excepción 
+--      ex_personal_sin_capacidad y no llegaría a realizar la actualización.
 -- * P4.2
 --
 -- * P4.3
