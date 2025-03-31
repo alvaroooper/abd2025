@@ -205,7 +205,13 @@ end;
 --      es 5. Si el número de pedidos activos es 5, lanzaría la excepción 
 --      ex_personal_sin_capacidad y no llegaría a realizar la actualización.
 -- * P4.2
---
+--      Para evitar que dos transacciones concurrentes asignen un pedido al mismo personal de 
+--      servicio cuyos pedidos activos están a punto de superar el límite, lo que hacemos es
+--      realizar un bloqueo pesimista, para ello realizamos un bloqueo de escritura con el 
+--      FOR  UPDATE de tal forma que la primera transacción que acceda adquiere el bloqueo,
+--      y la siguiente transacción si quiere escribir sobre la fila del mismo personal de servicio
+--      tendrá que esperar a que la transacción que ha adquirido el bloqueo finalice y de esta forma
+--      libere el bloqueo.
 -- * P4.3
 --
 -- * P4.4
