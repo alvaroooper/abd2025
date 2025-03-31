@@ -332,6 +332,23 @@ begin
         DBMS_OUTPUT.PUT_LINE('');
     END;
 
+    -- caso 5: personal de servicio con el máximo de pedidos activos
+    DBMS_OUTPUT.PUT_LINE('Test 5: Pedido a un personal de servicio con el máximo de pedidos activos');
+    BEGIN
+        inicializa_test;
+        registrar_pedido(1, 2, 1, 2);
+        DBMS_OUTPUT.PUT_LINE('Test: FALLADO  -> No se lanzó excepción para el personal de servicio con el máximo de pedidos activos.');
+    EXCEPTION
+        WHEN OTHERS THEN
+            IF SQLCODE = -20003 THEN
+                DBMS_OUTPUT.PUT_LINE('Test: OK  -> Excepción correcta para personal de servicio con pedidos activos máximo: ' || SQLERRM);
+            ELSE
+                DBMS_OUTPUT.PUT_LINE('Test: FALLADO  -> Excepción no controlada: ' || SQLERRM);
+            END IF;
+        DBMS_OUTPUT.PUT_LINE('');
+    END;
+
+
   
   -- Idem para el resto de casos
 
