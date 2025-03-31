@@ -266,10 +266,16 @@ exec inicializa_test;
 
 -- Completa lost test, incluyendo al menos los del enunciado y añadiendo los que consideres necesarios
 
+-----------------------------------------------------------------------------
+-- Procedimiento para realizar los tests, comprobando que el código funcione
+-----------------------------------------------------------------------------
+
 create or replace procedure test_registrar_pedido is
 begin
 	 
-  --caso 1 Pedido correct, se realiza
+    ---------------------------------------------------------------------
+    -- Test para comprobar el caso 1 de un pedido correcto sin fallos
+    ---------------------------------------------------------------------
   begin
     inicializa_test;
     DBMS_OUTPUT.PUT_LINE('Test 1: Pedido correcto');
@@ -281,10 +287,11 @@ begin
         WHEN OTHERS THEN
             DBMS_OUTPUT.PUT_LINE('Test: FALLADO  -> Algo ha fallado, resultado no esperado' );
     END;
-  end;
-
-
-  --caso 2 Pedido sin ningún plato
+    
+    ---------------------------------------------------------------------
+    -- Test para comprobar el caso 2 de un pedido que no contenga platos
+    ---------------------------------------------------------------------
+    DBMS_OUTPUT.PUT_LINE('');
     DBMS_OUTPUT.PUT_LINE('Test 2: Pedido vacío (sin platos)');
     BEGIN
         inicializa_test;
@@ -297,11 +304,14 @@ begin
             ELSE
                 DBMS_OUTPUT.PUT_LINE('Test: FALLADO  -> Excepción no controlada: ' || SQLERRM);
             END IF;
+        DBMS_OUTPUT.PUT_LINE('');
     END;
   end;
-
-  -- caso 3: pedido plato que no existe
-      DBMS_OUTPUT.PUT_LINE('Test 3: Pedido con un plato que no existe');
+  
+    ---------------------------------------------------------------------------------
+    -- Test para comprobar el caso 3 de un pedido que contenga un plato que no existe
+    ---------------------------------------------------------------------------------
+    DBMS_OUTPUT.PUT_LINE('Test 3: Pedido con un plato que no existe');
     BEGIN
         inicializa_test;
         registrar_pedido(1, 1, 1, 5);
@@ -315,8 +325,11 @@ begin
             END IF;
         DBMS_OUTPUT.PUT_LINE('');
     END;
+    
 
-    -- caso 4: pedido con plato no disponible
+    -----------------------------------------------------------------------------------------
+    -- Test para comprobar el caso 4 de un pedido que contenga un plato que no esté disponible
+    -----------------------------------------------------------------------------------------
     DBMS_OUTPUT.PUT_LINE('Test 4: Pedido con un plato no disponible');
     BEGIN
         inicializa_test;
@@ -331,8 +344,10 @@ begin
             END IF;
         DBMS_OUTPUT.PUT_LINE('');
     END;
-
-    -- caso 5: personal de servicio con el máximo de pedidos activos
+    
+    --------------------------------------------------------------------------------------------------------
+    -- Test para comprobar el caso 5 de un pedido a un personal de servicio con el máximo de pedidos activos
+    --------------------------------------------------------------------------------------------------------
     DBMS_OUTPUT.PUT_LINE('Test 5: Pedido a un personal de servicio con el máximo de pedidos activos');
     BEGIN
         inicializa_test;
@@ -348,8 +363,7 @@ begin
         DBMS_OUTPUT.PUT_LINE('');
     END;
 
-
-  
+  --end;
   -- Idem para el resto de casos
 
   /* - Si se realiza un pedido vac´ıo (sin platos) devuelve el error -200002.
@@ -361,6 +375,7 @@ begin
   
 end;
 /
+
 
 
 set serveroutput on;
