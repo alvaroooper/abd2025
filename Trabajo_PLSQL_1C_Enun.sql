@@ -1,3 +1,4 @@
+-- Link repositorio github: https://github.com/alvaroooper/abd2025 
 DROP TABLE detalle_pedido CASCADE CONSTRAINTS;
 DROP TABLE pedidos CASCADE CONSTRAINTS;
 DROP TABLE platos CASCADE CONSTRAINTS;
