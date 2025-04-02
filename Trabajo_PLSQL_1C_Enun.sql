@@ -80,6 +80,11 @@ create or replace procedure registrar_pedido(
     PRAGMA EXCEPTION_INIT(ex_plato_no_existe, -20004);
     msg_plato_no_existe CONSTANT VARCHAR2(100) := 'El plato no nexiste';
 
+    -- Excepción para cuando el cliente no existe
+    ex_cliente_no_existe EXCEPTION;
+    PRAGMA EXCEPTION_INIT(ex_cliente_no_existe, -20005); -- Siguiente código de error
+    msg_cliente_no_existe CONSTANT VARCHAR2(100) := 'El cliente especificado no existe.';
+
     -----------------------------------------------------------
     --Declaración de variables
     -----------------------------------------------------------
@@ -95,6 +100,9 @@ create or replace procedure registrar_pedido(
     precioPlato2 INTEGER;
     precioTotal INTEGER;
     siguienteId INTEGER;
+
+    v_cliente_count INTEGER;
+
  begin
     -----------------------------------------------------------
     --Comprobación de que se selecciona al menos un plato
@@ -149,6 +157,16 @@ create or replace procedure registrar_pedido(
         FROM Platos
         WHERE id_plato = arg_id_segundo_plato;
     end if;
+
+    SELECT COUNT(*)
+    INTO v_cliente_count
+    FROM clientes
+    WHERE id_cliente = arg_id_cliente;
+    
+    IF v_cliente_count = 0 THEN
+        raise_application_error(-20005, msg_cliente_no_existe);
+    end if;
+
     ----------------------------------------------------------------------------
     --Validación y bloqueo del personal de servicio para control de concurrencia
     ----------------------------------------------------------------------------
