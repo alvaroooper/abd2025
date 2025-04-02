@@ -79,7 +79,9 @@ create or replace procedure registrar_pedido(
     ex_plato_no_existe  EXCEPTION;
     PRAGMA EXCEPTION_INIT(ex_plato_no_existe, -20004);
     msg_plato_no_existe CONSTANT VARCHAR2(100) := 'El plato no nexiste';
-
+    ----------------------------------------
+    -- Excepciones añadidas por nosotros
+    ----------------------------------------
     -- Excepción para cuando el cliente no existe
     ex_cliente_no_existe EXCEPTION;
     PRAGMA EXCEPTION_INIT(ex_cliente_no_existe, -20005); -- Siguiente código de error
@@ -166,6 +168,9 @@ create or replace procedure registrar_pedido(
         WHERE id_plato = arg_id_segundo_plato;
     end if;
 
+    ----------------------------------------------
+    -- Validación de la existencia del cliente
+    ----------------------------------------------
     SELECT COUNT(*)
     INTO v_cliente_count
     FROM clientes
@@ -175,6 +180,9 @@ create or replace procedure registrar_pedido(
         raise_application_error(-20005, msg_cliente_no_existe);
     end if;
 
+    --------------------------------------------------------
+    -- Validación de la existencia del personal de servicio
+    --------------------------------------------------------
     SELECT COUNT(*) INTO existe_personal
     FROM personal_servicio
     WHERE id_personal = arg_id_personal;
