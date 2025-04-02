@@ -85,6 +85,11 @@ create or replace procedure registrar_pedido(
     PRAGMA EXCEPTION_INIT(ex_cliente_no_existe, -20005); -- Siguiente código de error
     msg_cliente_no_existe CONSTANT VARCHAR2(100) := 'El cliente especificado no existe.';
 
+    -- Excepción para personal de servicio inexistente
+    ex_personal_no_existe EXCEPTION;
+    PRAGMA EXCEPTION_INIT(ex_personal_no_existe, -20006);
+    msg_personal_no_existe CONSTANT VARCHAR2(100) := 'El personal de servicio no existe.';
+
     -----------------------------------------------------------
     --Declaración de variables
     -----------------------------------------------------------
@@ -102,6 +107,9 @@ create or replace procedure registrar_pedido(
     siguienteId INTEGER;
 
     v_cliente_count INTEGER;
+
+    existe_personal INTEGER;
+
 
  begin
     -----------------------------------------------------------
@@ -165,6 +173,14 @@ create or replace procedure registrar_pedido(
     
     IF v_cliente_count = 0 THEN
         raise_application_error(-20005, msg_cliente_no_existe);
+    end if;
+
+    SELECT COUNT(*) INTO existe_personal
+    FROM personal_servicio
+    WHERE id_personal = arg_id_personal;
+    
+    if existe_personal = 0 then
+        raise_application_error(-20006, msg_personal_no_existe);
     end if;
 
     ----------------------------------------------------------------------------
