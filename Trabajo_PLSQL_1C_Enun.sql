@@ -444,6 +444,24 @@ begin
         DBMS_OUTPUT.PUT_LINE('');
     END;
 
+    ------------------------------------------------------------------------
+    -- Test para comprobar el caso 7 de un personal de servicio inexistente
+    ------------------------------------------------------------------------
+    DBMS_OUTPUT.PUT_LINE('Test 7: Pedido con personal de servicio inexistente');
+    BEGIN
+        inicializa_test;
+        registrar_pedido(1, 99, 1, 2); -- Personal 99 no existe
+        DBMS_OUTPUT.PUT_LINE('Test: FALLADO  -> No se lanzó excepción para personal inexistente.');
+    EXCEPTION
+        WHEN OTHERS THEN
+            IF SQLCODE = -20006 THEN
+                DBMS_OUTPUT.PUT_LINE('Test: OK  -> Excepción correcta para personal inexistente: ' || SQLERRM);
+            ELSE
+                DBMS_OUTPUT.PUT_LINE('Test: FALLADO  -> Excepción no controlada: ' || SQLERRM);
+            END IF;
+        DBMS_OUTPUT.PUT_LINE('');
+    END;
+
   --end;
   -- Idem para el resto de casos
 
