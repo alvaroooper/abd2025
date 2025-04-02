@@ -406,6 +406,28 @@ begin
         DBMS_OUTPUT.PUT_LINE('');
     END;
 
+    ---------------------------------------------------------------------------------
+    -- Test para comprobar el caso 6 de un pedido con un cliente que no existe
+    ---------------------------------------------------------------------------------
+    DBMS_OUTPUT.PUT_LINE('Test 6: Pedido con un cliente que no existe');
+    BEGIN
+        inicializa_test; -- Asegura que solo existen clientes 1 y 2
+        -- Llamamos con cliente 999 (inexistente), pero personal y platos válidos
+        registrar_pedido(999, 1, 1, 2);
+        -- Si llega aquí, es que no lanzó la excepción esperada
+        DBMS_OUTPUT.PUT_LINE('Test: FALLADO  -> No se lanzó excepción para cliente inexistente.');
+    EXCEPTION
+        WHEN OTHERS THEN
+            -- Comprobamos si el error es el esperado (-20005)
+            IF SQLCODE = -20005 THEN
+                DBMS_OUTPUT.PUT_LINE('Test: OK  -> Excepción correcta para cliente inexistente: ' || SQLERRM);
+            ELSE
+                -- Si es otro error, el test falla
+                DBMS_OUTPUT.PUT_LINE('Test: FALLADO  -> Excepción no controlada: ' || SQLERRM);
+            END IF;
+        DBMS_OUTPUT.PUT_LINE('');
+    END;
+
   --end;
   -- Idem para el resto de casos
 
